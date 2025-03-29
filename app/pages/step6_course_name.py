@@ -6,9 +6,7 @@ from utils.llm_response import custom_nudges
 import time
 import random
 
-# Load and preprocess dataset
-data = pd.read_csv("/home/ubuntu/student_loan_applications_with_branch.csv")
-filtered_data = remove_outliers_iqr_specific_columns(data, ['Total COE'])
+filtered_data = pd.read_excel("/home/ubuntu/app/data/output.xlsx")
 
 # Initialize session state variables
 if "source_city" not in st.session_state:

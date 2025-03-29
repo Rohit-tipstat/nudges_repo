@@ -6,14 +6,13 @@ from utils.llm_response import custom_nudges
 import random
 import time
 
+data = pd.read_excel("/home/ubuntu/app/data/output.xlsx")
 
-data = pd.read_csv("/home/ubuntu/student_loan_applications_with_branch.csv")
 filtered_data = remove_outliers_iqr_specific_columns(data, ['Total COE'])
-
-
 # Initialize session state for country_of_study
 if "country_of_study" not in st.session_state or st.session_state["country_of_study"] not in ['AUSTRALIA', 'CANADA', 'UNITED STATES OF AMERICA', 'UNITED KINGDOM']:
     st.session_state["country_of_study"] = "AUSTRALIA"
+
 
 if "source_city" not in st.session_state:
     st.session_state["source_city"] = "Unknown"

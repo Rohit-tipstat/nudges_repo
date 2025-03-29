@@ -12,6 +12,13 @@ def remove_outliers_iqr_specific_columns(data: pd.DataFrame, columns: List[str])
     Returns:
         pd.DataFrame: Filtered DataFrame without outliers.
     """
+    # First handle Total COE specifically
+    if 'Total COE' in data.columns:
+        # Convert to numeric and remove empty/missing values
+        data['Total COE'] = pd.to_numeric(data['Total COE'], errors='coerce')
+        data = data.dropna(subset=['Total COE'])
+        
+        
     Q1 = data[columns].quantile(0.25)
     Q3 = data[columns].quantile(0.75)
     IQR = Q3 - Q1
@@ -20,6 +27,8 @@ def remove_outliers_iqr_specific_columns(data: pd.DataFrame, columns: List[str])
     upper_bound = Q3 + 1.5 * IQR
 
     filtered_data = data[~((data[columns] < lower_bound) | (data[columns] > upper_bound)).any(axis=1)]
+    
+    filtered_data.to_csv('app/data/output.csv', index=False, header=True)
 
     return filtered_data
 

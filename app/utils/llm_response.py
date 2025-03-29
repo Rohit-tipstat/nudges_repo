@@ -21,33 +21,39 @@ Objective:
 Create engaging and creative notifications that enhance the student loan experience.
 
 Your Role:
-You are a witty and insightful content writer who crafts user-friendly nudges based only on the provided data.
+You are a witty, sarcastic, funny and insightful content writer who crafts user-friendly nudges that makes the user experience better based only on the provided data.
 
 Context:
 The company offers student loans for studying abroad and displays notifications to students during form-filling stages.
 
-Guidelines for Crafting Nudges:
-a) Keep it short and engaging: Maximum 15 words per nudge.
-b) Blend creativity with facts: Use humor, motivation, positivity, and relevant insights.
-c) Use a respectful and inclusive tone: No offensive or misleading content.
-d) Use emojis wisely: They enhance engagement but shouldn't be overused.
-e) Be precise and accurate: Always include complete financial details, exact numbers, and time frames.
-f) Focus on the company's role: Never assume students are self-financing; emphasize the loan provider's support.
-g) Provide only one meaningful nudge per request.
-h) No misleading or false claims: Use only the data provided, never assume anything or give infromation that is not mentioned 
-i) Include all relevant details: Never leave out critical information like time frames, amounts, or application counts.
-j) Avoid misleading phrasing: Instead of saying "You have received a loan," use "Students like you have received an average loan of X amount."
-The data report is given below to analyze. Make sure to use the information provided. 
+Procedure:
+Generate student loan application notifications using ONLY these rules:
+1. MAX 20s WORDS - Concise & impactful
+2. MUST USE ALL provided data points exactly
+3. Add 2+ relevant emojis
+4. Positive/humorous tone - NO assumptions/false info
+5. Carefully Analyse and always mention the time frame if it is mentioned in the data report (like last month, 3 months and 6 months) are provided.
+6. In Ranking mentioned notification do not mention time duration.
+7. If there are situations were the result shows zero people in it, Then make it motivating and positive that the student is first one to apply.
+8. When there is data analysis report on top 3 courses. Create a nudges where it tells about the top 3 courses.
+9. Always note the loan amount if present in the data analysis report. Make sure you the correct amount when creating nudge
+Example Data Input:
+"50 students chose Canada last month"
+
+Example Output:
+"50 classmates picked Canada last month ❄️🍁 Brave the cold for world-class education! Join the crew!"
+
+
+NOTE: If there are information like the 'x' number of students chose 'Y' as there prefered country to study last month. For this information make sure to use 'X', 'Y' and 'last month' in the notification.
+The data analysis report to use is given below:
 {data_report}
 """
-
-
         # Send the chat request
         response = chat(
             messages=[{"role": "user", "content": prompt}],
-            model="deepseek-r1:70b",
+            model="deepseek-r1:32b",
             format=CustomizedNudges.model_json_schema(),
-            options={'temperature': 0.1, 'top_p': 0.1, 'frequency_penalty': 0.7, 'presence_penalty': 0.9},
+            options={'temperature': 0.1, 'top_p': 0.7, 'frequency_penalty': 0.7, 'presence_penalty': 0.9},
         )
 
         # Parse and validate the response

@@ -5,6 +5,9 @@ import math
 from datetime import datetime, timedelta
 import math
 
+
+
+
 def country_selected(data: pd.DataFrame, country_of_study: str, source_city: str) -> List[str]:
     """
     Perform analysis for a specific country selection.
@@ -39,7 +42,7 @@ def country_selected(data: pd.DataFrame, country_of_study: str, source_city: str
     count_filtered_by_city = len(country_selected_data[country_selected_data['Source Branch'] == source_city])
 
     # Loan details
-    loan_disbursed_sanctioned = country_selected_data[country_selected_data['Status'].isin(['Disbursed', 'Sanctioned'])]
+    loan_disbursed_sanctioned = country_selected_data[country_selected_data['CURRENT_WS'].isin(['Disbursed', 'Sanctioned'])]
     sum_of_COE = math.ceil(loan_disbursed_sanctioned['Total COE'].fillna(0).sum())
 
     number_of_people = len(country_selected_data)
@@ -47,11 +50,11 @@ def country_selected(data: pd.DataFrame, country_of_study: str, source_city: str
 
     output = [
         #f"Number of people who have selected {country_of_study} as their country to study: {number_of_people}",
-        f"On average, students have received a loan of {helper.indian_human_readable(average_loan_per_person)}",
+        f"On average, students had requested for a loan of amount {helper.indian_human_readable(average_loan_per_person)}",
         #f"{count_filtered_by_city} students from {source_city} have applied to study in {country_of_study}.",
-        f"{last_6_months_country_of_study} students chose {country_of_study} as there prefered country to study in the last 6 months!",
-        f"In last 3 months, {last_3_months_country_of_study} students chose {country_of_study} as there prefered country to study!",
-        f"{last_1_month_country_of_study} students chose {country_of_study} as there prefered country to study 1 month!",
+        f"A total of {last_6_months_country_of_study} students chose {country_of_study} as there prefered country to study in last 6 months.",
+        f"{last_3_months_country_of_study} students chose {country_of_study} as there prefered country to study in the last 3 months!",
+        f"{last_1_month_country_of_study} students chose {country_of_study} as there prefered country to study last month!",
     ]
 
     # Rank the country based on applications
@@ -60,7 +63,7 @@ def country_selected(data: pd.DataFrame, country_of_study: str, source_city: str
     ranked_countries.columns = ['Country of Study', 'Number of Applications']
     rank_position = ranked_countries[ranked_countries['Country of Study'] == country_of_study].index[0] + 1
 
-    output.append(f"{country_of_study} ranks {rank_position}th based on student applications received.")
+    output.append(f"{country_of_study} rank {rank_position} based on student applications received.")
 
     return output
 
@@ -90,7 +93,9 @@ def university_selected(data: pd.DataFrame, university_name: str, source_city: s
 
     # Filter data for the selected university
     university_data = data[data['University Name'] == university_name]
-    city_specific_data = university_data[university_data['Source Branch'] == source_city]
+    six_month_city_specific_data = len(university_data[(university_data['Source Branch'] == source_city) & (university_data['Login Date'] >= six_months_ago)])
+    three_month_city_specific_data = len(university_data[(university_data['Source Branch'] == source_city) & (university_data['Login Date'] >= three_months_ago)])
+    one_month_city_specific_data = len(university_data[(university_data['Source Branch'] == source_city) & (university_data['Login Date'] >= one_month_ago)])
 
     # Count registrations in the last 6, 3, and 1 months
     last_6_months = len(university_data[university_data['Login Date'] >= six_months_ago])
@@ -98,7 +103,7 @@ def university_selected(data: pd.DataFrame, university_name: str, source_city: s
     last_1_month = len(university_data[university_data['Login Date'] >= one_month_ago])
 
     # Loan details
-    loan_disbursed_sanctioned = university_data[university_data['Status'].isin(['Disbursed', 'Sanctioned'])]
+    loan_disbursed_sanctioned = university_data[university_data['CURRENT_WS'].isin(['Disbursed', 'Sanctioned'])]
     total_loan_amount = math.ceil(loan_disbursed_sanctioned['Total COE'].fillna(0).sum())
     avg_loan_per_person = math.ceil(total_loan_amount / max(1, len(loan_disbursed_sanctioned)))
 
@@ -117,20 +122,22 @@ def university_selected(data: pd.DataFrame, university_name: str, source_city: s
         rank_position = "Not Ranked"
 
     output = [
-        f"Number of students who selected {university_name}: {len(university_data)}",
-        f"Number of students from {source_city} applying to {university_name}: {len(city_specific_data)}",
-        f"Average loan amount provided previously to students in {university_name}: {helper.indian_human_readable(avg_loan_per_person)}",
-        f"Number of students registered in the last 6 months: {last_6_months}",
-        f"Number of students registered in the last 3 months: {last_3_months}",
-        f"Number of students registered in the last 1 month: {last_1_month}",
-        f"{university_name} is ranked {rank_position} based on the number of student applications"
+        #f"Number of students who selected {university_name}: {len(university_data)}",
+        f"In last 1 month, {one_month_city_specific_data} students from {source_city} applied to {university_name}",
+        f"In last 3 months, {three_month_city_specific_data} students from {source_city} applied to {university_name}",
+        f"An Average loan amount of {helper.indian_human_readable(avg_loan_per_person)} was requested previously by the students who joined {university_name}",
+        f"A total of {last_6_months} students showed intereset to study in {university_name} in last 6 months",
+        f"{last_3_months} students showed interest to study in {university_name} in last 3 months",
+        f"Last month, {last_1_month} students were interested to study in {university_name}",
+        #f"{university_name} is ranked {rank_position} based on the number of student applications"
     ]
 
     # Format popular courses
     course_nudges_ = [
-        f"Popular course {i + 1}: {row['Course Name']} with {row['Number of Applicants']} applicants"
+        f"{university_name} Popular course {i + 1}: {row['Course Name']} with {row['Number of Applicants']} applicants"
         for i, row in top_courses.iterrows()
     ]
+    
     course_nudge = " | ".join(course_nudges_)
     output.append(course_nudge)
 
@@ -189,12 +196,12 @@ def course_type_analysis(data: pd.DataFrame, course_type: str, source_city: str,
     popular_courses.columns = ['Course Name', 'Number of Applicants']
 
     output = [
-        f"Number of students who selected {course_type}: {total_students}",
-        f"Number of students from {source_city} applying to {course_type}: {city_students_count}",
+        f"Over {total_students} students have selected {course_type} uptil now.",
+        # f"Number of students from {source_city} applying to {course_type}: {city_students_count}",
         f"Students who selected {course_type} in the last 6 months: {last_6_months_count}",
         f"Students who selected {course_type} in the last 3 months: {last_3_months_count}",
         f"Students who selected {course_type} in the last 1 month: {last_1_month_count}",
-        f"Average loan amount provided previously to students for {course_type} course: {helper.indian_human_readable(avg_loan_amount)}",
+        f"Previously students with {course_type} course requested for an Average loan amount of {helper.indian_human_readable(avg_loan_amount)}",
     ]
     
     # Popular course details
@@ -209,13 +216,8 @@ def course_type_analysis(data: pd.DataFrame, course_type: str, source_city: str,
     if country_of_study:
         country_students = data[data['Country of Study'] == country_of_study]
         total_country_students = len(country_students)
-        output.append(f"{country_of_study} has a total of {total_country_students} student applications.")
+        output.append(f"A total of {total_country_students} students have gone to {country_of_study} with our help")
 
-    # University-specific data
-    if university_name:
-        university_students = data[data['University Name'] == university_name]
-        total_university_students = len(university_students)
-        output.append(f"{university_name} has {total_university_students} students.")
 
     return output
 
@@ -227,8 +229,7 @@ def analyze_student_exam_data(
     course_type: str,
     source_city: str,
     country_selected: str,
-    university_selected: str
-):
+    university_selected: str):
     """
     Analyze student application data and provide insights based on the given parameters.
 
@@ -257,8 +258,8 @@ def analyze_student_exam_data(
     # Filter data for students with similar exam scores applying to the same university
     similar_students = data[
         (data[exam_taken] >= score - 10) &
-        (data[exam_taken] <= score + 10) &
-        (data['University Name'] == university_selected)
+        (data[exam_taken] <= score + 10) #&
+#        (data['University Name'] == university_selected)
     ]
     num_similar_students = similar_students.shape[0]
 
@@ -278,16 +279,16 @@ def analyze_student_exam_data(
             (data[exam_taken] <= score + 10)]['University Name'].value_counts().head(3).index.tolist()
         if not data.empty else []
     )
-    top_applied_universities = "|".join(top_applied_universities_)
+    top_applied_universities = " * ".join(top_applied_universities_)
 
     # Compile the results
     results = [
-        f"{num_similar_students} students with a similar {exam_taken} score have enrolled in the same university!",
-        f"On average, students with a similar {exam_taken} score received a loan of {helper.indian_human_readable(avg_loan) if not pd.isna(avg_loan) else 0} for this university.",
-        f"Top universities chosen by students with a similar {exam_taken} score in the same country: {top_applied_universities}.",
-        f"{students_last_6_months} students with a similar {exam_taken} score have registered in the last 6 months!",
-        f"{students_last_3_months} students with a similar {exam_taken} score have registered in the last 3 months!",
-        f"{students_last_1_month} students with a similar {exam_taken} score have registered in the last month!"
+        #f"{num_similar_students} students with a similar {exam_taken} score have enrolled in the same university!",
+        f"On average, students with a similar {exam_taken} score have requested for a loan amount of {helper.indian_human_readable(avg_loan) if not pd.isna(avg_loan) else 0} for this university.",
+        #f"{country_selected}'s popular colleges: {top_applied_universities}.",
+        f"In last 6 months, {students_last_6_months} students with a similar {exam_taken} score have registered with us!",
+        f"In last 3 months, {students_last_3_months} students with a similar {exam_taken} score have registered with us!",
+        f"In last 1 month, {students_last_1_month} students with a similar {exam_taken} score have registered with us!"
     ]
 
     return results
@@ -340,16 +341,16 @@ def course_level_analysis(data: pd.DataFrame, course_level: str, source_branch: 
     
     # Prepare output
     output = [
-        f"Number of students enrolled in {course_level}: {total_students}",
+        f"A lifetime total of {total_students} students enrolled in {course_level} with us",
         f"Number of students from {source_branch} enrolled in {course_level}: {branch_students_count}",
         f"Average loan per person for {course_level}: {helper.indian_human_readable(avg_loan_amount)}",
-        f"Students registered in last 6 months: {students_last_6_months}",
-        f"Students registered in last 3 months: {students_last_3_months}",
-        f"Students registered in last 1 month: {students_last_1_month}",
+        f"In last 6 months, {students_last_6_months} students registered for {course_level} course",
+        f"In last 3 months, {students_last_3_months} students registered for {course_level} course",
+        f"In last 1 months, {students_last_1_month} students registered for {course_level} course",
     ]
     
     # Popular courses
-    popular_courses_ = [f"Popular course {idx + 1}: {row['Course Name']} with {row['Number of Applicants']} applicants" 
+    popular_courses_ = [f"Popular course {idx + 1}: {row['Course Name']}" 
                          for idx, row in popular_courses.iterrows()]
     output.append("|".join(popular_courses_))
 
@@ -358,13 +359,13 @@ def course_level_analysis(data: pd.DataFrame, course_level: str, source_branch: 
                           for idx, row in university_counts.iterrows()]
     output.append("|".join(top_universities_))
 
-    # Country-level analysis (if provided)
-    if country_of_study:
-        country_data = filtered_data[filtered_data['Country of Study'] == country_of_study]
-        total_country_students = len(country_data)
-        output.append(
-            f"{country_of_study} has a lifetime total of {total_country_students} student applications."
-        )
+    # # Country-level analysis (if provided)
+    # if country_of_study:
+    #     country_data = filtered_data[filtered_data['Country of Study'] == country_of_study]
+    #     total_country_students = len(country_data)
+    #     output.append(
+    #         f"{country_of_study} has a lifetime total of {total_country_students} student applications."
+    #     )
 
     # University-level analysis (if provided)
     if university_name:
@@ -423,21 +424,22 @@ def course_name_analysis(data: pd.DataFrame, course_name: str, source_city: str,
 
     # Prepare output
     output = [
-        f"Number of students enrolled in {course_name}: {total_students}",
-        f"Number of students from {source_city} applying for {course_name}: {city_students_count}",
-        f"Average loan per person for a course like {course_name}: {helper.indian_human_readable(avg_loan_amount)}",
-        f"Registrations in the last 6 months: {last_6m_count}",
-        f"Registrations in the last 3 months: {last_3m_count}",
-        f"Registrations in the last 1 month: {last_1m_count}",
+        f"A total of {total_students} students have enrolled in {course_name} in our application.",
+        f"In total, {city_students_count} students from {source_city} applying for {course_name}.",
+        f"An Average loan of {helper.indian_human_readable(avg_loan_amount)} for a course like {course_name}: ",
+        f"In last 6 months, {last_6m_count} students have Registered for {course_name}",
+        f"In the last 3 months, {last_3m_count} students have Registered for {course_name}.",
+        f"In the last 1 months, {last_1m_count} students have Registered for {course_name}.",
     ]
 
     # Popular Universities for the given Course
     popular_universities_ = []
     for idx, row in popular_universities.iterrows():
-        popular_universities_.append(f"Popular University {idx + 1}: {row['University Name']} with {row['Number of Students']} students")
+        popular_universities_.append(f"Popular University {idx + 1}: {row['University Name']}")
 
     popular_universities = "|".join(popular_universities_)
     output.append(popular_universities)
+
 
     # Country-level analysis (if provided)
     if country_of_study:
