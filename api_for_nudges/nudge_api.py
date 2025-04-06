@@ -2,10 +2,8 @@ from fastapi import FastAPI, HTTPException, Form
 from typing import Optional, List
 import pandas as pd
 from data_analysis import (
-    country_selected, university_selected, course_type_analysis, 
-    analyze_student_exam_data, course_level_analysis, course_name_analysis,
-    general_nudges
-)
+    country_selected, university_selected, course_type_analysis, analyze_student_exam_data,
+    course_level_analysis, course_name_analysis, general_nudges)
 from llm_response import custom_nudges
 from helper_function.helper import remove_outliers_iqr_specific_columns, indian_human_readable
 import random
@@ -97,8 +95,8 @@ async def analyze_exam_data(
     score: float = Form(...),
     course_type: str = Form(...),
     source_city: str = Form(...),
-    country_selected: str = Form(...),
-    university_selected: str = Form(...)
+    country_of_study: str = Form(...),
+    university_name: str = Form(...)
 ):
     """
     Analyze student exam data.
@@ -106,7 +104,7 @@ async def analyze_exam_data(
     try:
         result = analyze_student_exam_data(
             data, exam_taken, score, course_type,
-            source_city, country_selected, university_selected
+            source_city, country_of_study, university_name
         )
         print("Results: ", result)
 
@@ -121,7 +119,7 @@ async def analyze_exam_data(
 @app.post("/analyze/course-level", response_model=List[str])
 async def analyze_course_level(
     course_level: str = Form(...),
-    source_branch: str = Form(...),
+    source_city: str = Form(...),
     country_of_study: Optional[str] = Form(default=None),
     university_name: Optional[str] = Form(default=None)
 ):
@@ -130,7 +128,7 @@ async def analyze_course_level(
     """
     try:
         result = course_level_analysis(
-            data, course_level, source_branch, 
+            data, course_level, source_city, 
             country_of_study, university_name
         )
         print("Results: ", result)
@@ -177,8 +175,11 @@ async def analyze_general():
         print("Result", result)
         if not result:
             return ["No Nudge!"]
-        nudges = custom_nudges([random.choice(result)])  # Optional: Apply custom nudges if you have this logic
+        nudges = custom_nudges(result)  # Optional: Apply custom nudges if you have this logic
         return nudges[0].nudges
+
+        # Fallback to result if custom_nudges doesn't modify as expected
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
