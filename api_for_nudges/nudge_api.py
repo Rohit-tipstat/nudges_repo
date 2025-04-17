@@ -172,14 +172,12 @@ async def analyze_general():
     """
     try:
         result = general_nudges(data)
-        print("Result", result)
+        print("Results: ", result)
         if not result:
             return ["No Nudge!"]
-        nudges = custom_nudges(result)  # Optional: Apply custom nudges if you have this logic
+        nudges = custom_nudges([random.choice(result)])  # Optional: Apply custom nudges if you have this logic
+        
         return nudges[0].nudges
-
-        # Fallback to result if custom_nudges doesn't modify as expected
-        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
